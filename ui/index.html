@@ -68,15 +68,19 @@
         </div>
       </div>
       <div class="instruments">
-        <figure class="histogram">
+        <figure class="histogram" id="hist-figure">
           <canvas id="hist" aria-hidden="true"></canvas>
           <figcaption class="sr-only" id="hist-caption">Brightness histogram for red, green and blue</figcaption>
         </figure>
         <dl class="readouts">
           <div class="readout"><dt>Frame rate</dt><dd><span id="r-fps">0</span> <span class="unit">fps</span></dd></div>
           <div class="readout"><dt>Brightness</dt><dd id="r-luma">0</dd></div>
-          <div class="readout"><dt>White balance</dt><dd id="r-wb">No picture</dd></div>
+          <div class="readout" id="wb-readout"><dt>White balance</dt><dd id="r-wb">No picture</dd></div>
         </dl>
+        <div class="switch-row instruments-toggle">
+          <span class="switch-label" id="hist-label">Histogram and colour check <span class="field-hint">(decodes frames, uses a little CPU)</span></span>
+          <button class="switch" type="button" role="switch" aria-checked="false" aria-labelledby="hist-label" id="sw-hist"></button>
+        </div>
         <p class="field-hint lowlight" id="lowlight" hidden>Low light: the camera slows itself down to collect more light. A lamp or screen light on your face brings it back to about 15 fps.</p>
       </div>
     </section>

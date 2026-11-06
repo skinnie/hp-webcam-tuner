@@ -332,7 +332,8 @@ body {
 
 .histogram { margin: 0; }
 
-.lowlight { grid-column: 1 / -1; }
+.lowlight,
+.instruments-toggle { grid-column: 1 / -1; }
 
 .histogram canvas {
   display: block;

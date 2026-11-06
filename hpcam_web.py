@@ -53,7 +53,8 @@ class Capture:
         self.cond = threading.Condition()
         self.error = ''
 
-    def start(self, dev, loopback=None, denoise=0.0, sharpen=0.0):
+    def start(self, dev, loopback=None, denoise=0.0, sharpen=0.0, stats=True):
+        """stats=False (and no loopback): nothing is decoded at all, the preview is a pure copy."""
         self.stop()
         chain = []
         if loopback and denoise > 0:
@@ -68,27 +69,32 @@ class Capture:
                '-fflags', 'nobuffer', '-flags', 'low_delay', '-threads', '1',
                '-f', 'v4l2', '-input_format', 'mjpeg',
                '-video_size', '%dx%d' % (PW, PH), '-framerate', '30', '-i', dev]
-        stats = '[s]fps=6,scale=%d:%d,format=rgb24[st]' % (SW, SH)
+        stats_graph = '[s]fps=6,scale=%d:%d,format=rgb24[st]' % (SW, SH)
         if loopback:
             # virtual camera on: the preview shows the processed picture (what call apps get)
-            graph = '[0:v]%ssplit=3[p][s][v];[p]null[pv];%s;[v]format=yuyv422[lo]' % (pre, stats)
+            graph = '[0:v]%ssplit=3[p][s][v];[p]null[pv];%s;[v]format=yuyv422[lo]' % (pre, stats_graph)
             cmd += ['-filter_complex', graph,
                     '-map', '[pv]', '-fps_mode', 'passthrough', '-c:v', 'mjpeg', '-q:v', '4',
                     '-f', 'mjpeg', 'pipe:1',
                     '-map', '[st]', '-f', 'rawvideo', 'pipe:%d' % w,
                     '-map', '[lo]', '-f', 'v4l2', loopback]
         else:
-            # preview = the camera's own JPEGs, copied untouched (no decode, no re-encode);
-            # only the small statistics stream is decoded
-            cmd += ['-map', '0:v', '-c:v', 'copy', '-fps_mode', 'passthrough', '-f', 'mjpeg', 'pipe:1',
-                    '-filter_complex', '[0:v]null[s];' + stats,
-                    '-map', '[st]', '-f', 'rawvideo', 'pipe:%d' % w]
+            # preview = the camera's own JPEGs, copied untouched (no decode, no re-encode)
+            cmd += ['-map', '0:v', '-c:v', 'copy', '-fps_mode', 'passthrough', '-f', 'mjpeg', 'pipe:1']
+            if stats:
+                # small statistics stream for histogram / white balance: the only decode
+                cmd += ['-filter_complex', '[0:v]null[s];' + stats_graph,
+                        '-map', '[st]', '-f', 'rawvideo', 'pipe:%d' % w]
+        with_stats = bool(loopback or stats)
         self.error = ''
         self.proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, pass_fds=(w,))
         os.close(w)
         proc = self.proc
         threading.Thread(target=self._read_jpeg, args=(proc,), daemon=True).start()
-        threading.Thread(target=self._read_stats, args=(proc, r), daemon=True).start()
+        if with_stats:
+            threading.Thread(target=self._read_stats, args=(proc, r), daemon=True).start()
+        else:
+            os.close(r)
         threading.Thread(target=self._read_err, args=(proc,), daemon=True).start()
 
     def _read_jpeg(self, proc):
@@ -145,7 +151,9 @@ class Controller:
         self.profile = hpcam.load_profile()
         self.profile.setdefault('virtual', {'denoise': 3.0, 'sharpen': 0.5})
         self.profile.setdefault('awb', False)
+        self.profile.setdefault('histogram', False)
         self.cam = None
+        self.stats_on = False          # whether the running capture decodes statistics
         self.preview_on = True
         self.virtual_on = False
         self.capture = Capture(self.on_stats)
@@ -156,7 +164,7 @@ class Controller:
         self.balance_left = 0
         self.save_timer = None
         self.btn_was = False
-        self._fps_t, self._fps_n, self._last_jseq = time.time(), 0, 0
+        threading.Thread(target=self._meter_loop, daemon=True).start()
         threading.Thread(target=self._housekeeping, daemon=True).start()
         threading.Thread(target=self._button_loop, daemon=True).start()
 
@@ -198,7 +206,17 @@ class Controller:
                 return
             lb = loopback_device()[0] if self.virtual_on else None
             v = self.profile['virtual']
-            self.capture.start(self.cam.dev, lb, v['denoise'], v['sharpen'])
+            self.stats_on = bool(lb) or self.need_stats()
+            self.capture.start(self.cam.dev, lb, v['denoise'], v['sharpen'], stats=self.stats_on)
+
+    def need_stats(self):
+        """Decode frames only while something uses them (saves CPU and battery)."""
+        return bool(self.profile.get('histogram') or self.profile.get('awb') or self.balance_left > 0)
+
+    def _match_stats_mode(self):
+        with self.lock:
+            if self.capture.running() and not self.virtual_on and self.stats_on != self.need_stats():
+                self._restart_capture()
 
     # ----- background loops -----
     def _housekeeping(self):
@@ -221,7 +239,22 @@ class Controller:
                     if self.virtual_on and not loopback_device()[0]:
                         self.virtual_on = False
                         self._restart_capture()
+                    self._match_stats_mode()
             time.sleep(2)
+
+    def _meter_loop(self):
+        """Frame rate from frames actually received; brightness from the chip's own meter
+        (register 3:5F) whenever no frames are being decoded."""
+        last_seq, last_t = self.capture.jseq, time.time()
+        while True:
+            time.sleep(1)
+            now, seq = time.time(), self.capture.jseq
+            self.stats['fps'] = max(0, seq - last_seq) / (now - last_t)
+            last_seq, last_t = seq, now
+            if not self.stats_on and self.capture.running():
+                v = self._cam_do(lambda c: c.read(hpcam.CHIP, 0x5f)[0])
+                if v is not None:
+                    self.stats.update(luma=float(v), hist=None)
 
     def _button_loop(self):
         while True:
@@ -235,14 +268,9 @@ class Controller:
         """Called from the capture thread with each small RGB frame."""
         means, _ = hpcam.neutral_means(small)
         r, g, b = means
-        hist = [np.histogram(small[..., c], bins=48, range=(0, 256))[0].tolist() for c in range(3)]
+        hist = ([np.histogram(small[..., c], bins=48, range=(0, 256))[0].tolist() for c in range(3)]
+                if self.profile.get('histogram') else None)
         now = time.time()
-        jseq = self.capture.jseq
-        self._fps_n += jseq - self._last_jseq
-        self._last_jseq = jseq
-        if now - self._fps_t >= 1:
-            self.stats['fps'] = self._fps_n / (now - self._fps_t)
-            self._fps_t, self._fps_n = now, 0
         self.stats.update(luma=float(small.mean()), rg=float(r / g), bg=float(b / g), hist=hist)
         if self.balance_left > 0:
             if abs(r / g - 1) < 0.015 and abs(b / g - 1) < 0.015:
@@ -285,7 +313,7 @@ class Controller:
                 'error': self.capture.error, 'preview': self.preview_on, 'virtual': self.virtual_on,
                 'loopback': lb, 'loopback_name': lb_name, 'service': self.service_enabled(),
                 'profile': self.profile, 'stats': self.stats, 'events': self.events,
-                'balancing': self.balance_left > 0,
+                'balancing': self.balance_left > 0, 'measuring': self.stats_on,
             }
 
     def set(self, key, value):
@@ -300,8 +328,9 @@ class Controller:
                 g[i] = float(value) * 64
                 self._set_gains(g)
                 return
-            elif key == 'awb':
-                self.profile['awb'] = bool(value)
+            elif key in ('awb', 'histogram'):
+                self.profile[key] = bool(value)
+                self._match_stats_mode()
             elif key in ('denoise', 'sharpen'):
                 self.profile['virtual'][key] = round(float(value), 2)
                 if self.virtual_on:
@@ -319,6 +348,7 @@ class Controller:
                     raise RuntimeError('Turn on the preview first')
                 self.balance_left = 10
                 self.last_awb = 0
+                self._match_stats_mode()
             elif name in ('preview_on', 'preview_off'):
                 self.preview_on = name == 'preview_on'
                 self.capture.error = ''

@@ -111,3 +111,8 @@ factory values. `run` and the GUI re-apply the profile once the chip is live (en
   brightness control and timing the change in received frames: median 522 ms -> 334 ms. The rest is
   the camera (one frame is ~200 ms at ~5 fps in dim light). With the virtual camera on, the preview
   is still the processed (re-encoded) picture.
+- Histogram is now optional (off by default). With histogram and automatic white balance off, the
+  app decodes nothing: ffmpeg only copies JPEGs (0.1% of a core vs 2.3% with statistics at ~5 fps).
+  Frame rate then comes from frames received, brightness from the chip's meter (3:5F, its own scale).
+- Same room, same moment, both streaming (2026-11-06 evening): Creative VF0260 with our patched
+  ov519 driver ~30 fps, HP 6.6 fps. The difference is sensor control, not light alone.

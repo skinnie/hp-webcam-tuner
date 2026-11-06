@@ -125,6 +125,7 @@ function showSwitch(sw, on) {
 }
 
 bindSwitch($('sw-awb'), (on) => setValue('awb', on));
+bindSwitch($('sw-hist'), (on) => setValue('histogram', on));
 bindSwitch($('sw-virtual'), (on) => action(on ? 'virtual_on' : 'virtual_off'));
 bindSwitch($('sw-service'), (on) => action(on ? 'service_on' : 'service_off'));
 
@@ -260,6 +261,9 @@ function render(s) {
   VIRTUAL.forEach((spec) => { sliders[spec.key].set(p.virtual[spec.key]); sliders[spec.key].enable(!!s.loopback); });
   selectFlicker(p.uvc.power_line ?? 1, false);
   showSwitch($('sw-awb'), p.awb);
+  showSwitch($('sw-hist'), p.histogram);
+  $('hist-figure').hidden = !p.histogram;
+  $('wb-readout').hidden = !s.measuring;
   showSwitch($('sw-virtual'), s.virtual);
   showSwitch($('sw-service'), s.service);
 
@@ -293,7 +297,7 @@ function render(s) {
     }
     $('r-wb').textContent = verdict;
     $('hist-caption').textContent = `Histogram. Average brightness ${Math.round(st.luma)} of 255. White balance ${verdict.toLowerCase()}.`;
-    drawHist(st.hist);
+    if (p.histogram) drawHist(st.hist);
   } else {
     $('r-wb').textContent = 'No picture';
     drawHist(null);

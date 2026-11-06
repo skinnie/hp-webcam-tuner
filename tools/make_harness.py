@@ -5,8 +5,8 @@ import json, os, subprocess
 UI = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'ui')
 STATE = {
     'camera': 'live', 'device': '/dev/video2', 'error': '', 'preview': True, 'virtual': False,
-    'loopback': None, 'loopback_name': None, 'service': True, 'balancing': False, 'events': [],
-    'profile': {'gains': [64, 64, 70], 'awb': False,
+    'loopback': None, 'loopback_name': None, 'service': True, 'balancing': False, 'measuring': True, 'events': [],
+    'profile': {'gains': [64, 64, 70], 'awb': False, 'histogram': True,
                 'uvc': {'brightness': 128, 'contrast': 55, 'gamma': 68, 'saturation': 130, 'hue': 0,
                         'sharpness': 4, 'backlight': 0, 'power_line': 1},
                 'virtual': {'denoise': 3.0, 'sharpen': 0.5}},
