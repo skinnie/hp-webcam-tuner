@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="hpcam-token" content="__HPCAM_TOKEN__">
+  <title>HP Webcam</title>
+  <link rel="stylesheet" href="/ui/tokens.css">
+  <link rel="stylesheet" href="/ui/app.css">
+</head>
+<body>
+  <svg class="sprite" aria-hidden="true" focusable="false">
+    <symbol id="i-camera" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></symbol>
+    <symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></symbol>
+    <symbol id="i-reset" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="14" height="14" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+    <symbol id="i-plug" viewBox="0 0 24 24"><path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"/></symbol>
+  </svg>
+
+  <a class="skip" href="#settings">Skip to settings</a>
+
+  <header class="appbar">
+    <div class="brand">
+      <svg class="icon brand-icon" aria-hidden="true"><use href="#i-camera"/></svg>
+      <h1 class="brand-name">HP Webcam</h1>
+      <p class="status-chip" id="status-chip" role="status">
+        <span class="status-dot" aria-hidden="true"></span><span id="status-text">Looking for the camera</span>
+      </p>
+    </div>
+    <div class="appbar-actions">
+      <button class="btn btn-primary" id="btn-photo" type="button">
+        <svg class="icon" aria-hidden="true"><use href="#i-camera"/></svg><span>Take photo</span>
+      </button>
+      <button class="btn btn-secondary btn-icon" id="btn-preview" type="button" aria-pressed="true" aria-label="Pause preview">
+        <svg class="icon" aria-hidden="true"><use href="#i-pause" id="preview-icon"/></svg>
+      </button>
+      <div class="menu-wrap">
+        <button class="btn btn-secondary btn-icon" id="btn-menu" type="button" aria-label="More actions" aria-expanded="false" aria-controls="menu">
+          <svg class="icon" aria-hidden="true"><use href="#i-more"/></svg>
+        </button>
+        <div class="menu" id="menu" hidden>
+          <button class="menu-item" type="button" data-action="open_photos">
+            <svg class="icon" aria-hidden="true"><use href="#i-folder"/></svg>Open photos folder
+          </button>
+          <button class="menu-item" type="button" data-action="reset">
+            <svg class="icon" aria-hidden="true"><use href="#i-reset"/></svg>Reset to camera defaults
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="workbench">
+    <section class="monitor" aria-labelledby="monitor-title">
+      <h2 class="sr-only" id="monitor-title">Live picture</h2>
+      <div class="frame" id="frame">
+        <img id="preview" alt="Live picture from the webcam" width="640" height="480" hidden>
+        <div class="placeholder" id="placeholder">
+          <div class="spinner" id="spinner" aria-hidden="true"></div>
+          <svg class="icon icon-lg" id="placeholder-icon" aria-hidden="true" hidden><use href="#i-plug"/></svg>
+          <p class="placeholder-title" id="placeholder-title">Starting the camera</p>
+          <p class="placeholder-body" id="placeholder-body"></p>
+        </div>
+      </div>
+      <div class="instruments">
+        <figure class="histogram">
+          <canvas id="hist" aria-hidden="true"></canvas>
+          <figcaption class="sr-only" id="hist-caption">Brightness histogram for red, green and blue</figcaption>
+        </figure>
+        <dl class="readouts">
+          <div class="readout"><dt>Frame rate</dt><dd><span id="r-fps">0</span> <span class="unit">fps</span></dd></div>
+          <div class="readout"><dt>Brightness</dt><dd id="r-luma">0</dd></div>
+          <div class="readout"><dt>White balance</dt><dd id="r-wb">No picture</dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <aside class="rail" id="settings" aria-label="Settings" tabindex="-1">
+      <section class="group" aria-labelledby="g-picture">
+        <h2 class="group-title" id="g-picture">Picture</h2>
+        <div class="fields" id="picture-fields"></div>
+        <div class="field">
+          <span class="field-label" id="flicker-label">Light flicker</span>
+          <div class="segmented" role="radiogroup" aria-labelledby="flicker-label" id="flicker">
+            <button type="button" role="radio" data-value="0">Off</button>
+            <button type="button" role="radio" data-value="1">50 Hz</button>
+            <button type="button" role="radio" data-value="2">60 Hz</button>
+          </div>
+          <p class="field-hint">Match your mains frequency to stop banding under lamps.</p>
+        </div>
+      </section>
+
+      <section class="group" aria-labelledby="g-colour">
+        <h2 class="group-title" id="g-colour">Colour</h2>
+        <div class="switch-row">
+          <span class="switch-label" id="awb-label">Automatic white balance</span>
+          <button class="switch" type="button" role="switch" aria-checked="false" aria-labelledby="awb-label" id="sw-awb"></button>
+        </div>
+        <p class="field-hint" id="gain-hint">The camera has no white balance of its own. These are its hidden colour gains.</p>
+        <div class="fields" id="gain-fields"></div>
+        <button class="btn btn-secondary btn-block" type="button" id="btn-balance">
+          <span class="spinner spinner-sm" aria-hidden="true"></span><span class="btn-label">Balance once on what the camera sees</span>
+        </button>
+      </section>
+
+      <section class="group" aria-labelledby="g-output">
+        <h2 class="group-title" id="g-output">Virtual camera</h2>
+        <div class="switch-row">
+          <span class="switch-label" id="virt-label">Send to other apps</span>
+          <button class="switch" type="button" role="switch" aria-checked="false" aria-labelledby="virt-label" aria-describedby="virt-hint" id="sw-virtual"></button>
+        </div>
+        <div class="fields" id="virtual-fields"></div>
+        <div class="field-hint" id="virt-hint"></div>
+      </section>
+
+      <section class="group" aria-labelledby="g-startup">
+        <h2 class="group-title" id="g-startup">After replugging</h2>
+        <div class="switch-row">
+          <span class="switch-label" id="svc-label">Keep these settings applied in the background</span>
+          <button class="switch" type="button" role="switch" aria-checked="false" aria-labelledby="svc-label" id="sw-service"></button>
+        </div>
+        <p class="field-hint">The camera forgets everything when unplugged. A small background service puts your settings back.</p>
+      </section>
+    </aside>
+  </main>
+
+  <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+
+  <script src="/ui/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+# decompiled HP/Vimicro code and test photos: kept locally, never published
+re/
+# raw register logs and camera frames from experiments (contain people)
+tools/data/

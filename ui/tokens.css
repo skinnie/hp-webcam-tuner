@@ -1,0 +1,176 @@
+/* HP Webcam tuner: the one theme layer. Every colour, size, radius and timing used by
+   app.css comes from here. Surfaces are pure neutral greys on purpose: a tinted UI shifts
+   how you judge the camera's colour. One accent (green) marks "on" states. */
+
+:root {
+  /* primitives: neutral ramp (zero chroma) */
+  --n-50: #f7f7f7;
+  --n-100: #eeeeee;
+  --n-150: #e4e4e4;
+  --n-200: #d4d4d4;
+  --n-300: #b8b8b8;
+  --n-400: #8f8f8f;
+  --n-500: #6b6b6b;
+  --n-600: #525252;
+  --n-700: #3d3d3d;
+  --n-750: #303030;
+  --n-800: #262626;
+  --n-850: #1e1e1e;
+  --n-900: #171717;
+  --n-950: #121212;
+  --green-300: #6fd3a2;
+  --green-400: #4cc38a;
+  --green-700: #17784d;
+  --green-800: #0f5c3a;
+  --red-300: #f4978f;
+  --red-700: #b42318;
+
+  /* data-viz: histogram channels */
+  --viz-red: #e5484d;
+  --viz-green: #30a46c;
+  --viz-blue: #3e7bfa;
+
+  /* semantic: dark theme is the base (a monitor reads best on dark surround) */
+  --color-bg: var(--n-950);
+  --color-surface: var(--n-900);
+  --color-surface-raised: var(--n-850);
+  --color-surface-sunken: var(--n-950);
+  --color-monitor: #0b0b0b;
+  --color-border: var(--n-750);
+  --color-border-strong: var(--n-500);
+  --color-text: var(--n-100);
+  --color-text-muted: var(--n-300);
+  --color-text-subtle: var(--n-400);
+  --color-accent: var(--green-400);
+  --color-accent-strong: var(--green-300);
+  --color-on-accent: var(--n-950);
+  --color-primary-bg: var(--n-100);
+  --color-primary-bg-hover: var(--n-50);
+  --color-primary-bg-active: var(--n-200);
+  --color-primary-text: var(--n-950);
+  --color-secondary-bg-hover: var(--n-800);
+  --color-secondary-bg-active: var(--n-750);
+  --color-selected-bg: var(--n-750);
+  --color-track: var(--n-700);
+  --color-switch-off: var(--n-500);
+  --color-switch-off-hover: var(--n-400);
+  --color-thumb: var(--n-100);
+  --color-halo: rgb(238 238 238 / 0.14);
+  --color-focus: var(--n-50);
+  --color-danger-text: var(--red-300);
+  --color-toast-bg: var(--n-100);
+  --color-toast-text: var(--n-950);
+  --color-code-bg: var(--n-950);
+
+  /* type */
+  --font-ui: system-ui, "Ubuntu", "Cantarell", "Noto Sans", sans-serif;
+  --font-mono: ui-monospace, "Ubuntu Mono", "DejaVu Sans Mono", monospace;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-display: 2.5rem;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --leading-tight: 1.15;
+  --leading-normal: 1.5;
+  --tracking-label: 0.06em;
+
+  /* spacing: 4px rhythm */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+
+  /* sizing */
+  --control-sm: 2rem;
+  --control-md: 2.5rem;
+  --target-min: 1.5rem;
+  --icon-sm: 1rem;
+  --icon-md: 1.25rem;
+  --switch-w: 2.875rem;
+  --switch-h: 1.5rem;
+  --switch-knob: 1.125rem;
+  --thumb: 1rem;
+  --track-h: 0.25rem;
+  --halo: 0.5rem;
+  --hist-h: 4.5rem;
+  --rail-w: 22rem;
+  --media-max-h: 60vh;
+  --border-w: 1px;
+  --focus-w: 2px;
+  --focus-offset: 2px;
+
+  /* radius: soft corners for surfaces and buttons, pill for switch/slider parts */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.875rem;
+  --radius-pill: 999px;
+
+  /* elevation: flat by default, one restrained level for overlays */
+  --shadow-overlay: 0 0.5rem 1.5rem rgb(0 0 0 / 0.35), 0 0 0 1px rgb(0 0 0 / 0.2);
+  --shadow-knob: 0.0625rem 0.0625rem 0.125rem rgb(0 0 0 / 0.35);
+
+  /* motion */
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-spin: 1s;
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --ease-spring: cubic-bezier(0.27, 0.2, 0.25, 1.51);
+
+  /* opacity */
+  --opacity-disabled: 0.5;
+  --opacity-track-fill: 1;
+
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --color-bg: var(--n-150);
+    --color-surface: var(--n-50);
+    --color-surface-raised: #fcfcfc;
+    --color-surface-sunken: var(--n-100);
+    --color-monitor: var(--n-900);
+    --color-border: var(--n-200);
+    --color-border-strong: var(--n-400);
+    --color-text: var(--n-900);
+    --color-text-muted: var(--n-600);
+    --color-text-subtle: var(--n-500);
+    --color-accent: var(--green-700);
+    --color-accent-strong: var(--green-800);
+    --color-on-accent: var(--n-50);
+    --color-primary-bg: var(--n-900);
+    --color-primary-bg-hover: var(--n-700);
+    --color-primary-bg-active: var(--n-600);
+    --color-primary-text: var(--n-50);
+    --color-secondary-bg-hover: var(--n-100);
+    --color-secondary-bg-active: var(--n-150);
+    --color-selected-bg: var(--n-200);
+    --color-track: var(--n-200);
+    --color-switch-off: var(--n-500);
+    --color-switch-off-hover: var(--n-600);
+    --color-thumb: var(--n-900);
+    --color-halo: rgb(23 23 23 / 0.12);
+    --color-focus: var(--n-900);
+    --color-danger-text: var(--red-700);
+    --color-toast-bg: var(--n-900);
+    --color-toast-text: var(--n-50);
+    --color-code-bg: var(--n-100);
+    --shadow-overlay: 0 0.5rem 1.5rem rgb(0 0 0 / 0.12), 0 0 0 1px rgb(0 0 0 / 0.06);
+    --shadow-knob: 0.0625rem 0.0625rem 0.125rem rgb(0 0 0 / 0.25);
+    color-scheme: light;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur-base: 0ms;
+  }
+}
