@@ -23,7 +23,18 @@ desktop app, a command line tool and an optional virtual camera.
 
 ## Install
 
-Needs Python 3 with NumPy, ffmpeg, and for the app window WebKitGTK 4.1 bindings
+**Debian, Ubuntu, Linux Mint:** download `hp-webcam-tuner_<version>_all.deb` from
+[Releases](https://github.com/skinnie/hp-webcam-tuner/releases) and install it:
+
+```sh
+sudo apt install ./hp-webcam-tuner_0.1.0_all.deb
+```
+
+That pulls in the dependencies, adds "HP Webcam" to the applications menu, installs the `hpcam`
+command, and sets up the virtual camera (`/dev/video10`, via the recommended `v4l2loopback-dkms`).
+Remove it with `sudo apt remove hp-webcam-tuner`.
+
+**From source:** needs Python 3 with NumPy, ffmpeg, and for the app window WebKitGTK 4.1 bindings
 (`gir1.2-webkit2-4.1` on Debian/Ubuntu/Mint). No root needed.
 
 ```sh
@@ -86,6 +97,7 @@ why it is not exposed, are in [NOTES.md](NOTES.md).
   `uitest.py` (interaction tests against the running app, off-screen WebKit), `check_contrast.py`
   (token contrast, both themes), `make_harness.py` + `run_ux_gates.sh` (static `ui/harness.html` for
   the [ux-ui-agent-skills](https://github.com/plugin87/ux-ui-agent-skills) gates; 22/22 pass).
+- `install/build_deb.sh VERSION` builds the .deb into `dist/` (no root needed).
 - UI components adapted from [Uiverse.io](https://uiverse.io) (Galaxy); see [ui/CREDITS.md](ui/CREDITS.md).
 
 ## License

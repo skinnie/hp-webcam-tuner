@@ -4,3 +4,4 @@ __pycache__/
 re/
 # raw register logs and camera frames from experiments (contain people)
 tools/data/
+dist/
