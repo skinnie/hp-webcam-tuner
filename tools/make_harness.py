@@ -10,7 +10,7 @@ STATE = {
                 'uvc': {'brightness': 128, 'contrast': 55, 'gamma': 68, 'saturation': 130, 'hue': 0,
                         'sharpness': 4, 'backlight': 0, 'power_line': 1},
                 'virtual': {'denoise': 3.0, 'sharpen': 0.5}},
-    'stats': {'fps': 15, 'luma': 112, 'rg': 1.01, 'bg': 0.99,
+    'stats': {'fps': 5, 'luma': 112, 'rg': 1.01, 'bg': 0.99,
               'hist': [[int(900 * __import__('math').exp(-((i - c) / 9) ** 2)) + 40 for i in range(48)]
                        for c in (20, 22, 25)]},
 }

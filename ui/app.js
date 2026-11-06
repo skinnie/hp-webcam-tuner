@@ -282,6 +282,7 @@ function render(s) {
 
   const st = s.stats;
   $('r-fps').textContent = live ? st.fps.toFixed(0) : '0';
+  $('lowlight').hidden = !(live && st.fps > 0 && st.fps < 9);
   $('r-luma').textContent = live ? Math.round(st.luma) : '0';
   if (live) {
     const off = Math.max(Math.abs(st.rg - 1), Math.abs(st.bg - 1));

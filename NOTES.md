@@ -100,3 +100,9 @@ factory values. `run` and the GUI re-apply the profile once the chip is live (en
   352x288 and 320x240 YUYV deliver frames. Not useful; quirk removed from setup-root.sh.
 - Virtual camera: app "Send to other apps" -> /dev/video10 "HP Webcam (tuned)" readable by another
   process (ffmpeg as a stand-in for a call app), switching off frees it.
+- Frame-rate readout bug (fixed): the preview pipeline used an fps=15 filter, which padded the
+  stream with duplicate frames, so the app said 15 fps while showing ~4.5. Preview now passes the
+  camera's frames through (-fps_mode passthrough) and the UI shows a low-light hint below 9 fps.
+- Fair comparison, real frames counted by wall clock (evening light): stock settings without app,
+  our profile without app, and profile + the app's button polling all give 5-6.5 fps. The app does
+  not slow the camera; the camera's own low-light mode does.

@@ -63,14 +63,16 @@ class Capture:
         pre = (','.join(chain) + ',') if chain else ''
         n_out = 3 if loopback else 2
         graph = '[0:v]%ssplit=%d[p][s]%s;' % (pre, n_out, '[v]' if loopback else '')
-        graph += '[p]fps=15[pv];[s]fps=6,scale=%d:%d,format=rgb24[st]' % (SW, SH)
+        # preview keeps the camera's own frame timing: no fps filter, so no duplicated frames
+        # (in dim light the camera itself drops to ~4-6 fps and the readout must show that)
+        graph += '[p]null[pv];[s]fps=6,scale=%d:%d,format=rgb24[st]' % (SW, SH)
         if loopback:
             graph += ';[v]format=yuyv422[lo]'
         r, w = os.pipe()
         cmd = ['ffmpeg', '-nostdin', '-loglevel', 'error', '-f', 'v4l2', '-input_format', 'mjpeg',
                '-video_size', '%dx%d' % (PW, PH), '-framerate', '30', '-i', dev,
                '-filter_complex', graph,
-               '-map', '[pv]', '-c:v', 'mjpeg', '-q:v', '4', '-f', 'mjpeg', 'pipe:1',
+               '-map', '[pv]', '-fps_mode', 'passthrough', '-c:v', 'mjpeg', '-q:v', '4', '-f', 'mjpeg', 'pipe:1',
                '-map', '[st]', '-f', 'rawvideo', 'pipe:%d' % w]
         if loopback:
             cmd += ['-map', '[lo]', '-f', 'v4l2', loopback]
