@@ -106,3 +106,8 @@ factory values. `run` and the GUI re-apply the profile once the chip is live (en
 - Fair comparison, real frames counted by wall clock (evening light): stock settings without app,
   our profile without app, and profile + the app's button polling all give 5-6.5 fps. The app does
   not slow the camera; the camera's own low-light mode does.
+- Latency fix: the preview now copies the camera's own JPEGs (they include Huffman tables) instead
+  of decode + re-encode, with -fflags nobuffer -flags low_delay -threads 1. Measured by flipping the
+  brightness control and timing the change in received frames: median 522 ms -> 334 ms. The rest is
+  the camera (one frame is ~200 ms at ~5 fps in dim light). With the virtual camera on, the preview
+  is still the processed (re-encoded) picture.

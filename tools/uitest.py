@@ -43,8 +43,11 @@ unnamed = [e['id'] for e in rep if not e['name']]
 check('every control has an accessible name (%d controls)' % len(rep), not unnamed, unnamed)
 small = [(e['id'], round(e['w']), round(e['h'])) for e in rep if e['w'] < 24 or e['h'] < 24]
 check('every target is at least 24x24', not small, small)
-untab = [e['id'] for e in rep if e['tab'] < 0 and 'radio' not in str(e) and e['id'] not in ('0','2')]
-check('controls reachable by Tab (radio group uses roving tabindex)', not untab, untab)
+radios = js("return [...document.querySelectorAll('[role=radio]')].map(r => r.tabIndex)")
+radio_ids = set(js("return [...document.querySelectorAll('[role=radio]')].map(r => r.dataset.value)"))
+untab = [e['id'] for e in rep if e['tab'] < 0 and e['id'] not in radio_ids]
+check('controls reachable by Tab', not untab, untab)
+check('radio group: exactly one radio in the Tab order (roving tabindex)', radios.count(0) == 1, radios)
 
 # switch: AWB
 before = server()['profile']['awb']

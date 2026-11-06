@@ -61,21 +61,28 @@ class Capture:
         if loopback and sharpen > 0:
             chain.append('unsharp=5:5:%.2f' % sharpen)
         pre = (','.join(chain) + ',') if chain else ''
-        n_out = 3 if loopback else 2
-        graph = '[0:v]%ssplit=%d[p][s]%s;' % (pre, n_out, '[v]' if loopback else '')
-        # preview keeps the camera's own frame timing: no fps filter, so no duplicated frames
-        # (in dim light the camera itself drops to ~4-6 fps and the readout must show that)
-        graph += '[p]null[pv];[s]fps=6,scale=%d:%d,format=rgb24[st]' % (SW, SH)
-        if loopback:
-            graph += ';[v]format=yuyv422[lo]'
         r, w = os.pipe()
-        cmd = ['ffmpeg', '-nostdin', '-loglevel', 'error', '-f', 'v4l2', '-input_format', 'mjpeg',
-               '-video_size', '%dx%d' % (PW, PH), '-framerate', '30', '-i', dev,
-               '-filter_complex', graph,
-               '-map', '[pv]', '-fps_mode', 'passthrough', '-c:v', 'mjpeg', '-q:v', '4', '-f', 'mjpeg', 'pipe:1',
-               '-map', '[st]', '-f', 'rawvideo', 'pipe:%d' % w]
+        # Low latency: no input buffering, single-threaded decode (frame threading holds frames
+        # back, and at the camera's ~5 fps in dim light every held frame is ~200 ms of lag).
+        cmd = ['ffmpeg', '-nostdin', '-loglevel', 'error',
+               '-fflags', 'nobuffer', '-flags', 'low_delay', '-threads', '1',
+               '-f', 'v4l2', '-input_format', 'mjpeg',
+               '-video_size', '%dx%d' % (PW, PH), '-framerate', '30', '-i', dev]
+        stats = '[s]fps=6,scale=%d:%d,format=rgb24[st]' % (SW, SH)
         if loopback:
-            cmd += ['-map', '[lo]', '-f', 'v4l2', loopback]
+            # virtual camera on: the preview shows the processed picture (what call apps get)
+            graph = '[0:v]%ssplit=3[p][s][v];[p]null[pv];%s;[v]format=yuyv422[lo]' % (pre, stats)
+            cmd += ['-filter_complex', graph,
+                    '-map', '[pv]', '-fps_mode', 'passthrough', '-c:v', 'mjpeg', '-q:v', '4',
+                    '-f', 'mjpeg', 'pipe:1',
+                    '-map', '[st]', '-f', 'rawvideo', 'pipe:%d' % w,
+                    '-map', '[lo]', '-f', 'v4l2', loopback]
+        else:
+            # preview = the camera's own JPEGs, copied untouched (no decode, no re-encode);
+            # only the small statistics stream is decoded
+            cmd += ['-map', '0:v', '-c:v', 'copy', '-fps_mode', 'passthrough', '-f', 'mjpeg', 'pipe:1',
+                    '-filter_complex', '[0:v]null[s];' + stats,
+                    '-map', '[st]', '-f', 'rawvideo', 'pipe:%d' % w]
         self.error = ''
         self.proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, pass_fds=(w,))
         os.close(w)
