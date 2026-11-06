@@ -91,6 +91,7 @@ factory values. `run` and the GUI re-apply the profile once the chip is live (en
 - Low light: the camera lowers its own frame rate (wall-clock 3.9 fps at 50 Hz, 4.8 fps at 60 Hz or
   off, in evening room light; about 15 fps in daylight). Requested frame rate and size make no
   difference. 3:28 and 1:B5/1:C3/1:B6 change with light but writing them does not change frame rate.
+  (The "~15 fps in daylight" figure above was never measured properly; see the frame-rate section.)
   Frame timing is most likely inside the sensor (I2C, behind unprobed sel 6/8). Fix is more light.
 - Measurement pitfall: ffmpeg's fps counter and fps-filtered pipes duplicate frames; count JPEG
   frames against wall-clock time instead.
@@ -116,3 +117,16 @@ factory values. `run` and the GUI re-apply the profile once the chip is live (en
   Frame rate then comes from frames received, brightness from the chip's meter (3:5F, its own scale).
 - Same room, same moment, both streaming (2026-11-06 evening): Creative VF0260 with our patched
   ov519 driver ~30 fps, HP 6.6 fps. The difference is sensor control, not light alone.
+
+## Frame rate: the low-light mode (measured 2026-11-06, tools/fpsscan.py, frames counted per second)
+- Negotiation is fine: the camera advertises 1/30 s for every MJPEG size, VIDIOC_G_PARM after
+  streamon reports 1/30 s.
+- Pointed at a bright lamp: 29-31 fps; back to the room: 4-7 fps within a second or two. The
+  switch is a firmware/sensor decision.
+- No register in spaces 1/2/3 splits cleanly between the fast and slow states (1:56, 1:BE, 1:58
+  overlap). Colour gains x2/x4 and 1:13 do not move the AE's own brightness measure (it is taken
+  before them), so they cannot trick the AE into the fast mode.
+- Selector 6 is write-only (GET always times out after 5 s); a flash-safe write [4B FF 01 00]
+  changed nothing visible. Per the VC0345 datasheet the sensor and the settings EEPROM share one
+  I2C bus, so blind selector 6/8 writes could alter the EEPROM (USB IDs, firmware patch). Not
+  pursued without the sensor model.

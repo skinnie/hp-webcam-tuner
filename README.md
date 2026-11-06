@@ -86,8 +86,10 @@ why it is not exposed, are in [NOTES.md](NOTES.md).
 - The sensor is 640x480. Detail is limited by the fixed-focus lens.
 - Uncompressed (YUYV) 640x480 does not work: without the `uvcvideo` bandwidth quirk it fails with
   "No space left on device", with it the stream starts but delivers no frames. MJPEG is used.
-- In dim light the camera lowers its own frame rate (about 4-5 fps in evening room light, about
-  15 fps in daylight). No register found controls this; more light on your face is the fix.
+- The camera does 30 fps in bright light (measured 29-31 fps pointed at a lamp), but in ordinary
+  room light its firmware switches to a slow low-light mode of about 4-6 fps. Linux negotiates
+  30 fps correctly; the firmware decides, so Windows behaves the same. No register found controls
+  the switch; a lamp or screen light on your face is the fix.
 - The light-flicker setting should match your mains (50 Hz in Europe). 60 Hz or Off is slightly
   faster in dim light but can show rolling bands under lamps.
 
