@@ -130,3 +130,21 @@ factory values. `run` and the GUI re-apply the profile once the chip is live (en
   changed nothing visible. Per the VC0345 datasheet the sensor and the settings EEPROM share one
   I2C bus, so blind selector 6/8 writes could alter the EEPROM (USB IDs, firmware patch). Not
   pursued without the sensor model.
+
+## Space 7 fully decoded (read-only, tools/data/space7.json) — it is the power-on defaults table
+Selector 7 is 10 bytes wide per address but only byte 0 is used; bytes 1-9 are always zero.
+Addresses 0x00-0xa4 hold a static table (same every read), 0xa5-0xff are zero. Decoded landmarks:
+- 0x64-65 = 0x0280 = 640 (default frame width)
+- 0x68-69 = 0x1388 = 5000 (white-balance temperature default, 5000K — matches the UVC control default)
+- 0x47-48 = 500, 0x49-4a = 1000 (the AE limits seen elsewhere)
+- 0x70-7a = 1e 30 49 5d 6f 7f 8d a8 c0 d7 eb (the gamma/tone curve, also in space 3 at 0x18)
+It is the firmware's default ISP/UVC settings, NOT a sensor I2C init script: it holds UVC-level
+concepts (WB in Kelvin, frame width) rather than sensor address/value pairs, and contains no sensor
+part number or USB VID/PID. So space 7 does not identify the sensor.
+
+## Where the sensor identity actually lives (not reachable read-only)
+Per the VC0345 datasheet the sensor init and any firmware patch live in the chip's OTP ROM / external
+EEPROM, reached over the chip's internal I2C bus. That bus is what selector 6 writes to (and selector
+6/8 never answer reads). There is no path through this XU interface to read the sensor's ID registers
+or the EEPROM without blind writes on the shared sensor/EEPROM bus. Identifying the sensor needs the
+chip marking from opening the case.

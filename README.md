@@ -74,6 +74,7 @@ Mapped registers:
 | 1:A2-AB | tone curve (contrast, gamma) |
 | 1:B6 | sharpening strength |
 | 1:13 | digital brightness multiplier after the sensor |
+| 7:xx | firmware power-on defaults (gamma, WB 5000K, AE limits, 640 width); read-only, no sensor id |
 | 1:56-57, 1:58 | exposure and gain, driven by the firmware's auto exposure (writes are walked back within ~2 s) |
 
 All writes are volatile: unplugging restores factory values, and the app and service re-apply your
