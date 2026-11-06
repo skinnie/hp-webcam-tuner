@@ -33,7 +33,7 @@ python3 hpcam_app.py --browser   # or open the UI in a browser instead of the ap
 ```
 
 Optional, needs root once: a virtual camera (`/dev/video10`, "HP Webcam (tuned)") loaded at boot,
-and the `uvcvideo` bandwidth quirk that uncompressed capture needs:
+so video-call apps can use the processed picture (turn on "Send to other apps" in the app):
 
 ```sh
 sudo sh install/setup-root.sh        # sudo sh install/setup-root.sh --undo to remove
@@ -73,6 +73,8 @@ why it is not exposed, are in [NOTES.md](NOTES.md).
 ## Known limits
 
 - The sensor is 640x480. Detail is limited by the fixed-focus lens.
+- Uncompressed (YUYV) 640x480 does not work: without the `uvcvideo` bandwidth quirk it fails with
+  "No space left on device", with it the stream starts but delivers no frames. MJPEG is used.
 - In dim light the camera lowers its own frame rate (about 4-5 fps in evening room light, about
   15 fps in daylight). No register found controls this; more light on your face is the fix.
 - The light-flicker setting should match your mains (50 Hz in Europe). 60 Hz or Off is slightly

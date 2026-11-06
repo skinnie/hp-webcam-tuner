@@ -94,3 +94,9 @@ factory values. `run` and the GUI re-apply the profile once the chip is live (en
   Frame timing is most likely inside the sensor (I2C, behind unprobed sel 6/8). Fix is more light.
 - Measurement pitfall: ffmpeg's fps counter and fps-filtered pipes duplicate frames; count JPEG
   frames against wall-clock time instead.
+
+## Uncompressed video and virtual camera (tested 2026-11-06 after setup-root.sh)
+- uvcvideo quirks=0x80: YUYV 640x480 no longer ENOSPC but delivers 0 frames at 30/15/10/5 fps;
+  352x288 and 320x240 YUYV deliver frames. Not useful; quirk removed from setup-root.sh.
+- Virtual camera: app "Send to other apps" -> /dev/video10 "HP Webcam (tuned)" readable by another
+  process (ffmpeg as a stand-in for a call app), switching off frees it.
