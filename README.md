@@ -27,7 +27,7 @@ desktop app, a command line tool and an optional virtual camera.
 [Releases](https://github.com/skinnie/hp-webcam-tuner/releases) and install it:
 
 ```sh
-sudo apt install ./hp-webcam-tuner_0.1.0_all.deb
+sudo apt install ./hp-webcam-tuner_0.1.1_all.deb
 ```
 
 That pulls in the dependencies, adds "HP Webcam" to the applications menu, installs the `hpcam`
