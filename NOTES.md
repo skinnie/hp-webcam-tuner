@@ -148,3 +148,21 @@ EEPROM, reached over the chip's internal I2C bus. That bus is what selector 6 wr
 6/8 never answer reads). There is no path through this XU interface to read the sensor's ID registers
 or the EEPROM without blind writes on the shared sensor/EEPROM bus. Identifying the sensor needs the
 chip marking from opening the case.
+
+## Portability test on a second machine (2026-11-07) — Linux Mint 22.1, kernel 6.8.0-149
+Tested over SSH on skinnie@100.113.100.37 (Ubuntu 24.04 base, Python 3.12, no GUI session):
+- git clone of the public repo, all modules import; find_device() returns None cleanly with no camera.
+- Web server boots headless; token auth works (unauth /api/state -> 403); camera=absent handled.
+- With the HP camera plugged in (enumerates as /dev/video1, uvcvideo): the vendor extension-unit
+  protocol works -> `hpcam status` reads the controls; after a 3 s stream the registers populate
+  (tone curve, gains) exactly as locally; UVC controls reflect the applied profile.
+- `hpcam calibrate` ran a full live white balance and converged (R/G 0.99, B/G 1.01), saved profile.
+- Web backend: camera=live, MJPEG stream serves real frames (~3.5 real fps in that room's light).
+- Not testable there: the GTK window (SSH/tty, no display) and the virtual camera (loopback module
+  not installed). Both environmental, not code.
+- Kernel 6.8 is stricter about UVC control sizes (EOVERFLOW on a >4-byte read of a 4-byte control);
+  the app only ever reads <=4 from spaces 1/2/3, so it is unaffected. An inline ffmpeg test command
+  without -nostdin ate piped-script bytes; the app's own ffmpeg calls all pass -nostdin.
+- TODO (cosmetic, re-check when a local HP camera is attached): confirm the R/G order in the
+  `hpcam status` gain readout; the read and write paths are symmetric by construction, so this is a
+  display check only.
